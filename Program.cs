@@ -169,12 +169,14 @@ namespace Chess
         public char X;
         public int Y;
         static Dictionary<char, int> XConverter = new Dictionary<char, int>() { { 'a', 0 }, { 'b', 1 }, { 'c', 2 }, { 'd', 3 }, { 'e', 4 }, { 'f', 5 }, { 'g', 6 }, { 'h', 7 } };
-        
-
         void FindPossibleMoves()
         {
-
+            
         }
+    }
+    class Pawn:Piece
+    {
+
     }
     
 }
