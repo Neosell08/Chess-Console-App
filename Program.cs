@@ -8,48 +8,57 @@ using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+
 namespace Chess
 {
     
 
     class Chess
     {
-        //[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         struct POINT
         {
             public Int32 X;
             public Int32 Y;
         }
-        //[DllImport("user32.dll")]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //static extern bool GetCursorPos(out POINT point);
-
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetCursorPos(out POINT point);
+        static List<Square> Squares = new List<Square>();
 
         static void Main()
         {
-
-            //POINT mousepos = new POINT();
-            //GetCursorPos(out mousepos);
-            GenerateBoard(ConsoleColor.Green, ConsoleColor.White, 80);
-
-
+            POINT mousepos = new POINT();
+            GetCursorPos(out mousepos);
+            GenerateBoard(ConsoleColor.Green, ConsoleColor.White, 240);
         }
-        static void GenerateBoard(ConsoleColor blackColor, ConsoleColor whitecolor, int height)
+
+
+
+
+
+
+
+
+
+
+
+        static void GenerateBoard(ConsoleColor blackColor, ConsoleColor whitecolor, int height) // generate board an pieces
         {
-            if (height * 3 > 300)
+            if (false)//height * 3 > 300)
             {
                 throw new ArgumentException("Height too large");
             }
 
 
-            List<Square> Squares = new List<Square>();
-            char[] alphabet = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
 
-            foreach (char c in alphabet)
+
+            #region Rendering Squares
+            for (int y = 1; y < 9; y++)
             {
-                for (int i = 0; i < 8; i++)
+                for (int i = 1; i < 9; i++)
                 {
-                    Squares.Add(new Square(c, i+1, GetColorOfPos(c, i+1, whitecolor, blackColor)));
+                    Squares.Add(new Square(y+1, i+1, _GetColorOfPos(y, i, whitecolor, blackColor)));
                 }
             }
             string temp = "";
@@ -60,7 +69,7 @@ namespace Chess
             Square.DrawingString = temp;
             
             Console.WriteLine("Please Zoom out");
-            while (Console.BufferWidth < 300)
+            while (Console.BufferHeight < height )
             {
 
             }
@@ -70,54 +79,68 @@ namespace Chess
             {
                 square.Render();
             }
-            
-            Console.ReadKey(true);
+            Piece.Squares = Squares;
+
+            #endregion
+
+            Pawn pawn = new Pawn(1, 1, PieceColor.black);
 
         }
 
 
 
-        static ConsoleColor GetColorOfPos(char c, int y, ConsoleColor whitecolor, ConsoleColor blackcolor)
+        static ConsoleColor _GetColorOfPos(int x, int y, ConsoleColor whitecolor, ConsoleColor blackcolor) //Used to get the color of a position on a chess board
         {
-            Dictionary<char, int> tempdict = new Dictionary<char, int>()
-            {
-                {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3}, {'e', 4}, {'f', 5}, {'g',  6}, {'h', 7}
-            };
+
+            if ((x + y) % 2 == 0) return whitecolor; else return blackcolor;
+
+            //if (x % 2 == 0)
+            //{
+            //    if (y % 2 == 0)
+            //    {
+            //        return whitecolor;
+            //    }
+            //    else
+            //    {
+            //        return blackcolor;
+            //    }
 
 
-            if (tempdict[c]%2 == 0)
-            {
-                if (y % 2 == 0)
-                {
-                    return whitecolor;
-                }
-                else
-                {
-                    return blackcolor;
-                }
-
-
-            }
-            else
-            {
-                if (y % 2 == 0)
-                {
-                    return blackcolor;
-                }
-                else
-                {
-                    return whitecolor;
-                }
-            }
+            //}
+            //else
+            //{
+            //    if (y % 2 == 0)
+            //    {
+            //        return blackcolor;
+            //    }
+            //    else
+            //    {
+            //        return whitecolor;
+            //    }
+            //}
         }
+
+
+        
     }
-    class Square
+
+
+
+
+
+
+
+
+
+
+    class Square // 
     {
         public ConsoleColor Color;
 
-        public char X;
+        public int X;
 
         public int Y;
+        public Piece? CurPiece;
 
         
         public static int SquareSize
@@ -128,20 +151,17 @@ namespace Chess
 
         public static string DrawingString;
 
-        public Square(char x, int y, ConsoleColor color)
+        public Square(int x, int y, ConsoleColor color, Piece? curPiece = null)
         {
             this.X = x;
             this.Y = y;
             this.Color = color;
-            
+            CurPiece = curPiece;
         }
         public void Render()
         {
             
-            Dictionary<char, int> tempdict = new Dictionary<char, int>()
-            {
-                {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3}, {'e', 4}, {'f', 5}, {'g',  6}, {'h', 7}
-            };
+            
             Console.ForegroundColor = this.Color;
             Console.BackgroundColor = this.Color;
             
@@ -155,7 +175,7 @@ namespace Chess
             for (int i = 0; i < SquareSize; i++)
             {
                 int hello = Console.BufferWidth;
-                Console.SetCursorPosition(tempdict[X] * SquareSize * 3, i + ((Y-1) * SquareSize));
+                Console.SetCursorPosition(X * SquareSize * 3, i + ((Y-1) * SquareSize));
                 Console.Write(DrawingString);
 
             }
@@ -164,19 +184,6 @@ namespace Chess
         }
         
     }
-    abstract class Piece
-    {
-        public char X;
-        public int Y;
-        static Dictionary<char, int> XConverter = new Dictionary<char, int>() { { 'a', 0 }, { 'b', 1 }, { 'c', 2 }, { 'd', 3 }, { 'e', 4 }, { 'f', 5 }, { 'g', 6 }, { 'h', 7 } };
-        void FindPossibleMoves()
-        {
-            
-        }
-    }
-    class Pawn:Piece
-    {
-
-    }
+    
     
 }
